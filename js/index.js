@@ -548,9 +548,9 @@ function animate() {
     requestAnimationFrame(animate);
     const time = Date.now() * 0.001;
 
-    // 星星闪烁 (使用更大的基础尺寸)
-    stars.forEach(star => {
-        star.scale.setScalar(5.0 + Math.sin(time * 3 + star.position.x) * 1.5);
+    // 星星闪烁 (稍微加快一点闪烁频率，让森林更灵动)
+    stars.forEach((s, i) => {
+        s.material.opacity = 0.7 + Math.sin(time * 3 + i) * 0.3;
     });
 
     // 魔法尘埃旋转
