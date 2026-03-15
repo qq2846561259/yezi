@@ -36,9 +36,11 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Build
         run: npm run build
+      - name: List files
+        run: ls -R dist
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
