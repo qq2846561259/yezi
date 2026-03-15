@@ -49,14 +49,9 @@ scene.add(tree);
 
 // --- 幸运果与祝福 ---
 const wishesMap = {
-    "爱情树": ["祝叶子大王遇到良人，白头偕老", "祝叶子大王：执子之手，与子偕老", "祝叶子大王所得皆所爱，一生被爱", "祝叶子大王情比金坚，永结同心", "祝叶子大王所求皆所愿，所爱皆所得"],
-    "财神树": ["祝叶子大王财源广进，金玉满堂", "祝叶子大王事业有成，富贵吉祥", "祝叶子大王财运亨通，日进斗金", "祝叶子大王招财进宝，大吉大利", "祝叶子大王福禄双全，年年有余"],
-    "平安树": ["祝叶子大王岁岁平安，万事如意", "祝叶子大王平安喜乐，诸事顺遂", "祝叶子大王出入平安，福星高照", "祝叶子大王健康平安，一生顺心", "祝叶子大王远离喧嚣，内心安稳"],
     "事业树": ["祝叶子大王前程似锦，步步高升", "祝叶子大王大展宏图，马到成功", "祝叶子大王事业辉煌，成就梦想", "祝叶子大王旗开得胜，更上一层楼", "祝叶子大王宏图大展，蒸蒸日上"],
     "快乐树": ["祝叶子大王天天开心，笑口开怀", "祝叶子大王所有的快乐都如期而至", "祝叶子大王忧愁全消，快乐无边", "祝叶子大王简单快乐，平安喜乐", "祝叶子大王的生活充满阳光"],
-    "健康树": ["祝叶子大王身体健康，龙马精神", "祝叶子大王百病不侵，活力常在", "祝叶子大王气色红润，精神焕发", "祝叶子大王长命百岁，健康如意", "祝叶子大王平安康泰，福寿安康"],
-    "智慧树": ["祝叶子大王学业有成，聪明伶俐", "祝叶子大王灵感不断，智慧过人", "祝叶子大王博学多才，见微知著", "祝叶子大王前程万里，志在必得", "祝叶子大王大智大勇，心怀远大"],
-    "幸运树": ["祝叶子大王好运连连，惊喜不断", "祝叶子大王被幸运女神眷顾", "祝叶子大王锦鲤附体，心想事成", "祝叶子大王事事順心，万事亨通", "祝叶子大王遇见美好，幸甚至哉"]
+    "健康树": ["祝叶子大王身体健康，龙马精神", "祝叶子大王百病不侵，活力常在", "祝叶子大王气色红润，精神焕发", "祝叶子大王长命百岁，健康如意", "祝叶子大王平安康泰，福寿安康"]
 };
 
 // 备选通用幸运果
@@ -72,14 +67,16 @@ const loader = new FBXLoader();
 const loadingEl = document.getElementById('loading');
 const progressEl = document.getElementById('progress');
 
+// 筛选出内存占用小的模型 (Tree4: 0.5MB, Tree5: 1.0MB, Tree7: 0.5MB)
 const treeFiles = [
-    'Tree1.fbx', 'Tree2.fbx', 'Tree3.fbx', 'Tree4.fbx', 
-    'Tree5.fbx', 'Tree6.fbx', 'Tree7.fbx', 'Tree8.fbx'
+    'Tree4.fbx', 'Tree5.fbx', 'Tree7.fbx'
 ];
 
+// 获取 Vite 的基础路径
+const BASE_URL = import.meta.env.BASE_URL || '/';
+
 const treeNames = [
-    "爱情树", "财神树", "平安树", "事业树", 
-    "快乐树", "健康树", "智慧树", "幸运树"
+    "快乐树", "健康树", "事业树"
 ];
 
 let loadedCount = 0;
@@ -87,8 +84,9 @@ const treePositions = []; // 存储已加载树的位置以防重叠
 
 treeFiles.forEach((fileName, index) => {
     const currentTreeName = treeNames[index];
-    // 使用相对路径加载，适配 GitHub Pages 部署
-    loader.load(`fbx/FBX_Y1374/${fileName}`, function (object) {
+    // 使用绝对路径加载，适配 GitHub Pages 部署，确保路径从 /yezi/ 开始
+    const modelPath = `${BASE_URL}fbx/FBX_Y1374/${fileName}`.replace(/\/+/g, '/');
+    loader.load(modelPath, function (object) {
         loadedCount++;
         
         // 进度更新
@@ -404,18 +402,27 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const wishCard = document.getElementById('wish-card');
 let isMouseDown = false;
+let isRightMouseDown = false;
 let previousMouseX = 0;
+let previousMouseY = 0;
 let isMouseOverTree = false;
 
 // 触摸相关变量
 let touchStartX = 0;
+let touchStartY = 0;
 let initialPinchDistance = 0;
+let lastPinchCenter = new THREE.Vector2();
 
 // 缩放与观察控制变量
-const minZoom = 15;  // 最近距离
-const maxZoom = 400; // 扩大范围，防止缩放被拦截
-const snowBoundary = 100; // 雪区大致边界
-let cameraTarget = new THREE.Vector3(0, 0, 0); 
+const minZoom = 15;
+const maxZoom = 400;
+const snowBoundary = 75;
+let cameraTarget = new THREE.Vector3(0, 0, 0);
+
+// 键盘控制移动状态
+const keys = { w: false, a: false, s: false, d: false };
+document.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true; });
+document.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
 
 // 统一缩放逻辑函数
 function applyZoom(deltaY, targetX, targetY) {
@@ -447,67 +454,60 @@ function applyZoom(deltaY, targetX, targetY) {
     
     const distFromOrigin = nextPosition.length();
     if (distFromOrigin >= minZoom && distFromOrigin <= maxZoom) {
-        if (Math.abs(nextPosition.x) < 200 && Math.abs(nextPosition.z) < 200) {
-            camera.position.copy(nextPosition);
-            cameraTarget.lerp(targetPoint, 0.1);
-            cameraTarget.x = Math.max(-50, Math.min(50, cameraTarget.x));
-            cameraTarget.z = Math.max(-50, Math.min(50, cameraTarget.z));
-        }
+        camera.position.copy(nextPosition);
+        cameraTarget.lerp(targetPoint, 0.1);
     }
 }
 
-document.addEventListener('wheel', (event) => {
-    event.preventDefault();
-    applyZoom(event.deltaY, event.clientX, event.clientY);
-}, { passive: false });
-
-// 触摸事件支持
-document.addEventListener('touchstart', (event) => {
-    if (event.touches.length === 1) {
-        isMouseDown = true;
-        touchStartX = event.touches[0].clientX;
-        
-        // 处理点击星星
-        mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
-        checkStarClick();
-    } else if (event.touches.length === 2) {
-        // 记录初始双指距离用于缩放
-        initialPinchDistance = Math.hypot(
-            event.touches[0].clientX - event.touches[1].clientX,
-            event.touches[0].clientY - event.touches[1].clientY
-        );
+// 统一平移逻辑函数 (自由移动)
+function applyPan(deltaX, deltaZ) {
+    const panSpeed = 0.5; // 提高平移速度
+    
+    // 计算相机的前方向和右方向 (在 XZ 平面上)
+    const forward = new THREE.Vector3().subVectors(cameraTarget, camera.position);
+    forward.y = 0;
+    forward.normalize();
+    
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
+    
+    // 计算移动向量
+    const moveVector = new THREE.Vector3()
+        .addScaledVector(right, -deltaX * panSpeed)
+        .addScaledVector(forward, deltaZ * panSpeed);
+    
+    // 预览新位置
+    const nextCameraPos = camera.position.clone().add(moveVector);
+    const nextTargetPos = cameraTarget.clone().add(moveVector);
+    
+    // 边界检查 (雪域范围内)
+    if (Math.abs(nextTargetPos.x) < snowBoundary && Math.abs(nextTargetPos.z) < snowBoundary) {
+        camera.position.copy(nextCameraPos);
+        cameraTarget.copy(nextTargetPos);
     }
-}, { passive: false });
+}
 
-document.addEventListener('touchmove', (event) => {
-    event.preventDefault();
-    if (event.touches.length === 1 && isMouseDown) {
-        const touchX = event.touches[0].clientX;
-        const deltaX = touchX - touchStartX;
-        tree.rotation.y += deltaX * 0.005;
-        touchStartX = touchX;
-    } else if (event.touches.length === 2) {
-        // 双指缩放
-        const currentDistance = Math.hypot(
-            event.touches[0].clientX - event.touches[1].clientX,
-            event.touches[0].clientY - event.touches[1].clientY
-        );
-        const delta = initialPinchDistance - currentDistance;
-        
-        // 中心点作为缩放目标
-        const centerX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-        const centerY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-        
-        applyZoom(delta * 2, centerX, centerY);
-        initialPinchDistance = currentDistance;
+// 统一旋转逻辑函数 (旋转摄像机，而非旋转森林)
+function applyOrbit(deltaX, deltaY) {
+    const rotationSpeed = 0.005;
+    const offset = new THREE.Vector3().subVectors(camera.position, cameraTarget);
+    
+    // 水平旋转 (围绕 Y 轴)
+    const angleY = -deltaX * rotationSpeed;
+    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angleY);
+    
+    // 垂直旋转 (围绕右轴)
+    const right = new THREE.Vector3().crossVectors(offset, new THREE.Vector3(0, 1, 0)).normalize();
+    const angleX = -deltaY * rotationSpeed;
+    
+    // 限制垂直旋转角度，防止翻转 (保持在 5 到 85 度之间)
+    const currentAngle = offset.angleTo(new THREE.Vector3(0, 1, 0));
+    const nextAngle = currentAngle + angleX;
+    if (nextAngle > 0.1 && nextAngle < Math.PI - 0.1) {
+        offset.applyAxisAngle(right, angleX);
     }
-}, { passive: false });
-
-document.addEventListener('touchend', () => {
-    isMouseDown = false;
-    initialPinchDistance = 0;
-});
+    
+    camera.position.copy(cameraTarget).add(offset);
+}
 
 function checkStarClick() {
     raycaster.setFromCamera(mouse, camera);
@@ -515,40 +515,135 @@ function checkStarClick() {
     if (intersects.length > 0) {
         wishCard.textContent = intersects[0].object.wish;
         wishCard.style.display = 'block';
+        setTimeout(() => { wishCard.style.display = 'none'; }, 3000);
     } else {
-        wishCard.style.display = 'none';
+        const treeIntersects = raycaster.intersectObjects(tree.children, true);
+        if (treeIntersects.length === 0) {
+            wishCard.style.display = 'none';
+        }
     }
 }
 
-document.addEventListener('mousedown', () => isMouseDown = true);
-document.addEventListener('mouseup', () => isMouseDown = false);
+// 事件监听器
+document.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    applyZoom(event.deltaY, event.clientX, event.clientY);
+}, { passive: false });
+
+document.addEventListener('mousedown', (event) => {
+    if (event.button === 0) isMouseDown = true;
+    if (event.button === 2) isRightMouseDown = true;
+    previousMouseX = event.clientX;
+    previousMouseY = event.clientY;
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    checkStarClick();
+});
 
 document.addEventListener('mousemove', (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    
+
+    // 检查鼠标是否悬停在树上
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(tree.children, true);
     isMouseOverTree = intersects.length > 0;
 
+    const deltaX = event.clientX - previousMouseX;
+    const deltaY = event.clientY - previousMouseY;
+
     if (isMouseDown) {
-        const deltaX = event.clientX - previousMouseX;
-        tree.rotation.y += deltaX * 0.005;
+        // 左键：旋转视角 (Orbit)
+        applyOrbit(deltaX, deltaY);
+    } else if (isRightMouseDown) {
+        // 右键：平移视角 (Pan)
+        applyPan(deltaX * 0.4, deltaY * 0.4);
     }
+
     previousMouseX = event.clientX;
+    previousMouseY = event.clientY;
 });
 
-document.addEventListener('click', (event) => {
-    // 鼠标点击逻辑保持不变，但提取出 checkStarClick
-    checkStarClick();
+document.addEventListener('mouseup', () => {
+    isMouseDown = false;
+    isRightMouseDown = false;
+});
+
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+document.addEventListener('touchstart', (event) => {
+    if (event.touches.length === 1) {
+        isMouseDown = true;
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+        mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+        checkStarClick();
+    } else if (event.touches.length === 2) {
+        initialPinchDistance = Math.hypot(
+            event.touches[0].clientX - event.touches[1].clientX,
+            event.touches[0].clientY - event.touches[1].clientY
+        );
+        lastPinchCenter.set(
+            (event.touches[0].clientX + event.touches[1].clientX) / 2,
+            (event.touches[0].clientY + event.touches[1].clientY) / 2
+        );
+    }
+}, { passive: false });
+
+document.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+    if (event.touches.length === 1 && isMouseDown) {
+        // 单指：旋转视角
+        const deltaX = event.touches[0].clientX - touchStartX;
+        const deltaY = event.touches[0].clientY - touchStartY;
+        applyOrbit(deltaX, deltaY);
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+    } else if (event.touches.length === 2) {
+        // 双指：缩放 + 平移
+        const currentDistance = Math.hypot(
+            event.touches[0].clientX - event.touches[1].clientX,
+            event.touches[0].clientY - event.touches[1].clientY
+        );
+        const currentCenter = new THREE.Vector2(
+            (event.touches[0].clientX + event.touches[1].clientX) / 2,
+            (event.touches[0].clientY + event.touches[1].clientY) / 2
+        );
+
+        const deltaZoom = initialPinchDistance - currentDistance;
+        applyZoom(deltaZoom * 2, currentCenter.x, currentCenter.y);
+        initialPinchDistance = currentDistance;
+
+        const deltaX = currentCenter.x - lastPinchCenter.x;
+        const deltaY = currentCenter.y - lastPinchCenter.y;
+        applyPan(deltaX * 0.8, deltaY * 0.8);
+        lastPinchCenter.copy(currentCenter);
+    }
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+    isMouseDown = false;
 });
 
 // --- 动画循环 ---
 function animate() {
     requestAnimationFrame(animate);
+
+    // 键盘移动逻辑
+    if (keys.w) applyPan(0, 3);
+    if (keys.s) applyPan(0, -3);
+    if (keys.a) applyPan(3, 0);
+    if (keys.d) applyPan(-3, 0);
+
+    // 自动旋转 (当没有交互时)
+    if (!isMouseDown && !isRightMouseDown && !isMouseOverTree) {
+        applyOrbit(0.3, 0); // 模拟极小量的水平旋转
+    }
     const time = Date.now() * 0.001;
 
-    // 星星闪烁 (稍微加快一点闪烁频率，让森林更灵动)
+    // 星星闪烁
     stars.forEach((s, i) => {
         s.material.opacity = 0.7 + Math.sin(time * 3 + i) * 0.3;
     });
@@ -559,26 +654,19 @@ function animate() {
     // 雪花下落逻辑
     const positions = snowGeometry.attributes.position.array;
     for (let i = 0; i < snowCount; i++) {
-        positions[i * 3 + 1] -= snowVelocities[i]; // 向下掉落
-        positions[i * 3] += Math.sin(time + i) * 0.02; // 左右轻微晃动
+        positions[i * 3 + 1] -= snowVelocities[i];
+        positions[i * 3] += Math.sin(time + i) * 0.02;
 
-        // 如果掉到地面以下，重置到顶部
         if (positions[i * 3 + 1] < -20) {
             positions[i * 3 + 1] = 60;
             positions[i * 3] = (Math.random() - 0.5) * 150;
             positions[i * 3 + 2] = (Math.random() - 0.5) * 150;
         }
     }
-    snowGeometry.attributes.position.needsUpdate = true; // 关键：通知 GPU 更新位置
+    snowGeometry.attributes.position.needsUpdate = true;
     
-    // 背景旋转
     starfield.rotation.y += 0.0001;
     nebula.rotation.y -= 0.0001;
-
-    // 树的自然缓慢旋转
-    if (!isMouseDown && !isMouseOverTree) {
-        tree.rotation.y += 0.0015;
-    }
 
     camera.lookAt(cameraTarget);
     renderer.render(scene, camera);
