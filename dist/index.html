@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>许愿树</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #wish-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+            text-align: center;
+            display: none;
+            font-size: 1.2em;
+            color: #333;
+            z-index: 100;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+            z-index: 50;
+            width: 100%;
+        }
+
+        #loading div:first-child {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        #progress {
+            margin-top: 5px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: "Microsoft YaHei", sans-serif;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            white-space: nowrap;
+            width: auto;
+        }
+
+        .main-title {
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .sub-title {
+            font-size: clamp(12px, 3.5vw, 14px);
+            opacity: 0.8;
+            color: #ffd700;
+            letter-spacing: 1px;
+        }
+    </style>
+  <script type="module" crossorigin src="./assets/index-B2-8_G60.js"></script>
+</head>
+
+<body>
+    <div id="title">
+        <div class="main-title">星河入梦 · 叶子大王的奇幻森林</div>
+        <div class="sub-title">✨ 漫步林下，采撷星光里的幸运果</div>
+    </div>
+    <div id="wish-card"></div>
+    <div id="loading">
+        <div>✨</div>
+        <div>正在开启奇幻森林...</div>
+        <div id="progress">0%</div>
+    </div>
+
+    <!-- Vite 会自动处理模块导入 -->
+</body>
+
+</html>
