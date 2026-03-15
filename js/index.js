@@ -16,7 +16,7 @@ renderer.setClearColor(0x000000, 0);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 // 现代渲染设置，提升色彩亮度
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; // 更真实的电影感色调映射
 renderer.toneMappingExposure = 1.2; // 曝光度微调
 document.body.appendChild(renderer.domElement);
@@ -139,7 +139,7 @@ treeFiles.forEach((fileName, index) => {
                 if (child.material) {
                     child.material.side = THREE.DoubleSide;
                     if (child.material.map) {
-                        child.material.map.encoding = THREE.sRGBEncoding;
+                        child.material.map.colorSpace = THREE.SRGBColorSpace;
                     }
                     if (child.material.emissive) {
                         child.material.emissive.setHex(0x111111);
